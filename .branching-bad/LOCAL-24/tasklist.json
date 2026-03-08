@@ -1,0 +1,65 @@
+{
+  "schema_version": 1,
+  "issue_key": "LOCAL-24",
+  "generated_from_plan_version": 1,
+  "phases": [
+    {
+      "id": "phase-1",
+      "name": "Implementation",
+      "description": "Create the single-file animated Coming Soon HTML page",
+      "order": 1,
+      "tasks": [
+        {
+          "id": "task-1",
+          "title": "Create index.html with full animated Coming Soon page",
+          "description": "Create /Users/melih/Documents/code/test_small/index.html as a standalone file with all CSS and JS embedded. Include: dark background (#050508), glassmorphism container, glitch-animated COMING SOON heading, three animated gradient orbs, canvas particle system (~120 particles), countdown timer to 2027-01-01, badge, subtitle, decorative shimmer line, and tagline. All animations run on load with no external dependencies.",
+          "blocked_by": [],
+          "blocks": [
+            "task-2"
+          ],
+          "affected_files": [
+            "index.html"
+          ],
+          "acceptance_criteria": [
+            "Single index.html file exists at repo root",
+            "COMING SOON heading has glitch animation with cyan and pink pseudo-elements",
+            "Three blurred gradient orbs animate with drift keyframes",
+            "Canvas particle field renders ~120 colored particles that wrap edges",
+            "Countdown timer ticks toward 2027-01-01T00:00:00",
+            "Background is #050508 with purple/cyan/pink accents",
+            "Glassmorphism card uses backdrop-filter blur and semi-transparent border",
+            "No external network requests made"
+          ],
+          "suggested_subagent": "frontend-design",
+          "estimated_size": "M",
+          "complexity": "medium",
+          "suggested_model": "sonnet",
+          "status": "completed"
+        },
+        {
+          "id": "task-2",
+          "title": "Verify page renders correctly in browser",
+          "description": "Open index.html directly in a browser (no server required) and confirm all visual elements and animations are working: dark background, orbs animating, glitch effect on heading, countdown ticking, particles moving smoothly.",
+          "blocked_by": [
+            "task-1"
+          ],
+          "blocks": [],
+          "affected_files": [
+            "index.html"
+          ],
+          "acceptance_criteria": [
+            "Page opens without errors in browser",
+            "All animations run smoothly on load",
+            "No console errors",
+            "Countdown displays correct days/hours/minutes/seconds"
+          ],
+          "suggested_subagent": "",
+          "estimated_size": "S",
+          "complexity": "low",
+          "suggested_model": "haiku",
+          "status": "completed"
+        }
+      ]
+    }
+  ]
+}
