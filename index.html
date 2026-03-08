@@ -29,6 +29,16 @@
       opacity: 0.6;
     }
 
+    #globe {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 2;
+      pointer-events: none;
+      opacity: 0.85;
+    }
+
     .orb {
       position: fixed;
       border-radius: 50%;
@@ -298,6 +308,7 @@
 <body>
   <canvas id="particles"></canvas>
   <div class="noise"></div>
+  <canvas id="globe"></canvas>
   <div class="orb orb-1"></div>
   <div class="orb orb-2"></div>
   <div class="orb orb-3"></div>
@@ -420,6 +431,232 @@
 
       update();
       setInterval(update, 1000);
+    })();
+
+    // 3D Globe
+    (function () {
+      const canvas = document.getElementById('globe');
+      const ctx = canvas.getContext('2d');
+
+      let R, SIZE, cx, cy;
+
+      function calcDimensions() {
+        R = Math.min(window.innerWidth, window.innerHeight) * 0.38;
+        SIZE = R * 3.6; // extra space for satellite orbits
+        cx = SIZE / 2;
+        cy = SIZE / 2;
+        canvas.width = SIZE;
+        canvas.height = SIZE;
+      }
+
+      calcDimensions();
+
+      // Simplified continent outlines as [lon, lat] degree pairs
+      const continents = [
+        // Africa
+        [[-18,15],[-14,10],[-15,4],[-8,-4],[5,-2],[10,5],[3,5],[2,7],[5,12],[15,22],[22,37],[37,37],[44,12],[52,12],[50,8],[42,-5],[40,-12],[36,-22],[28,-35],[18,-35],[12,-18],[8,-2],[-5,5],[-15,10],[-18,15]],
+        // Europe
+        [[-10,36],[0,36],[15,37],[28,36],[36,42],[40,43],[36,55],[25,61],[15,60],[5,62],[0,58],[-5,50],[-10,44],[-10,36]],
+        // Asia (simplified)
+        [[36,42],[50,44],[60,43],[75,45],[90,52],[105,55],[120,54],[130,42],[130,36],[120,24],[110,20],[100,10],[95,5],[90,22],[80,30],[70,25],[60,22],[55,26],[50,30],[45,38],[40,38],[36,42]],
+        // North America
+        [[-170,72],[-140,70],[-100,72],[-82,68],[-70,65],[-52,47],[-60,45],[-70,42],[-75,38],[-80,30],[-85,25],[-90,20],[-87,15],[-82,8],[-78,8],[-75,10],[-80,22],[-100,22],[-108,28],[-118,32],[-122,38],[-124,47],[-130,54],[-140,58],[-155,60],[-165,64],[-170,72]],
+        // South America
+        [[-80,8],[-75,10],[-60,6],[-50,2],[-35,-5],[-35,-10],[-38,-18],[-44,-24],[-48,-28],[-52,-34],[-60,-40],[-65,-45],[-68,-50],[-72,-50],[-70,-42],[-72,-38],[-72,-30],[-70,-18],[-76,-6],[-80,0],[-80,8]],
+        // Australia
+        [[114,-22],[120,-20],[128,-16],[136,-12],[140,-18],[148,-20],[154,-28],[152,-38],[144,-38],[132,-32],[116,-34],[114,-28],[114,-22]],
+        // Antarctica (simplified ring)
+        [[-180,-70],[-120,-68],[-60,-72],[0,-68],[60,-72],[120,-68],[180,-70],[180,-90],[-180,-90],[-180,-70]],
+      ];
+
+      // Satellite definitions — aR/bR are semi-major/minor as ratios of R
+      // inclAmp: vertical (Y) amplitude ratio. speed: radians per frame.
+      const satDefs = [
+        { aR: 1.48, bR: 1.30, inclAmp: 0.10, speed:  0.009, phase: 0,              rgb: '0,210,255' },
+        { aR: 1.62, bR: 1.44, inclAmp: 0.07, speed:  0.0055, phase: Math.PI * 0.6,  rgb: '210,210,255' },
+        { aR: 1.36, bR: 1.20, inclAmp: 0.14, speed: -0.007, phase: Math.PI * 1.35, rgb: '255,170,0'   },
+        { aR: 1.54, bR: 1.36, inclAmp: 0.09, speed:  0.011, phase: Math.PI * 1.85, rgb: '140,255,140' },
+      ];
+
+      let angle = 0;
+
+      function project(lon, lat, rotDeg) {
+        const phi = (lat * Math.PI) / 180;
+        const theta = ((lon + rotDeg) * Math.PI) / 180;
+        const x3 = Math.cos(phi) * Math.sin(theta);
+        const y3 = -Math.sin(phi);
+        const z3 = Math.cos(phi) * Math.cos(theta);
+        return { x: cx + R * x3, y: cy + R * y3, z: z3 };
+      }
+
+      // Returns canvas {x, y} and depth z for a satellite at time t
+      function satPos(def, t) {
+        const orb = def.phase + t * def.speed;
+        const a = R * def.aR;
+        const b = R * def.bR;
+        const sx = a * Math.cos(orb);
+        const sz = b * Math.sin(orb);
+        const sy = R * def.inclAmp * Math.sin(orb + def.phase * 0.5);
+        return { x: cx + sx, y: cy + sy, z: sz };
+      }
+
+      function drawGlobe(rotDeg) {
+        ctx.clearRect(0, 0, SIZE, SIZE);
+
+        // Ocean sphere base
+        const oceanGrad = ctx.createRadialGradient(cx - R * 0.3, cy - R * 0.3, R * 0.05, cx, cy, R);
+        oceanGrad.addColorStop(0, '#1a5fa8');
+        oceanGrad.addColorStop(0.5, '#0a2a5e');
+        oceanGrad.addColorStop(1, '#050d1e');
+        ctx.beginPath();
+        ctx.arc(cx, cy, R, 0, Math.PI * 2);
+        ctx.fillStyle = oceanGrad;
+        ctx.fill();
+
+        // Clip subsequent draws to globe circle
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(cx, cy, R, 0, Math.PI * 2);
+        ctx.clip();
+
+        // Longitude grid lines every 30 degrees
+        ctx.strokeStyle = 'rgba(80,160,255,0.15)';
+        ctx.lineWidth = 0.5;
+        for (let lon = 0; lon < 360; lon += 30) {
+          ctx.beginPath();
+          let first = true;
+          for (let lat = -90; lat <= 90; lat += 3) {
+            const p = project(lon, lat, rotDeg);
+            if (p.z < 0) { first = true; continue; }
+            if (first) { ctx.moveTo(p.x, p.y); first = false; }
+            else ctx.lineTo(p.x, p.y);
+          }
+          ctx.stroke();
+        }
+
+        // Latitude grid lines every 30 degrees
+        for (let lat = -60; lat <= 60; lat += 30) {
+          ctx.beginPath();
+          let first = true;
+          for (let lon = 0; lon <= 360; lon += 3) {
+            const p = project(lon, lat, rotDeg);
+            if (p.z < 0) { first = true; continue; }
+            if (first) { ctx.moveTo(p.x, p.y); first = false; }
+            else ctx.lineTo(p.x, p.y);
+          }
+          ctx.stroke();
+        }
+
+        // Continent fills
+        ctx.fillStyle = 'rgba(40,180,80,0.7)';
+        ctx.strokeStyle = 'rgba(80,220,100,0.5)';
+        ctx.lineWidth = 1;
+        for (const continent of continents) {
+          ctx.beginPath();
+          let first = true;
+          for (const [lon, lat] of continent) {
+            const p = project(lon, lat, rotDeg);
+            if (p.z < 0) { first = true; continue; }
+            if (first) { ctx.moveTo(p.x, p.y); first = false; }
+            else ctx.lineTo(p.x, p.y);
+          }
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+        }
+
+        ctx.restore();
+
+        // Atmosphere glow ring (outside clip)
+        const atmGrad = ctx.createRadialGradient(cx, cy, R * 0.85, cx, cy, R * 1.18);
+        atmGrad.addColorStop(0, 'rgba(30,100,255,0)');
+        atmGrad.addColorStop(0.5, 'rgba(30,100,255,0.14)');
+        atmGrad.addColorStop(1, 'rgba(30,100,255,0)');
+        ctx.beginPath();
+        ctx.arc(cx, cy, R * 1.18, 0, Math.PI * 2);
+        ctx.fillStyle = atmGrad;
+        ctx.fill();
+
+        // Specular highlight (top-left)
+        const specGrad = ctx.createRadialGradient(cx - R * 0.35, cy - R * 0.35, 0, cx - R * 0.2, cy - R * 0.2, R * 0.6);
+        specGrad.addColorStop(0, 'rgba(255,255,255,0.22)');
+        specGrad.addColorStop(1, 'rgba(255,255,255,0)');
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(cx, cy, R, 0, Math.PI * 2);
+        ctx.clip();
+        ctx.fillStyle = specGrad;
+        ctx.fillRect(0, 0, SIZE, SIZE);
+
+        // Shadow gradient on right side
+        const shadowGrad = ctx.createRadialGradient(cx + R * 0.55, cy + R * 0.25, 0, cx + R * 0.2, cy, R * 1.1);
+        shadowGrad.addColorStop(0, 'rgba(0,0,0,0.55)');
+        shadowGrad.addColorStop(1, 'rgba(0,0,0,0)');
+        ctx.fillStyle = shadowGrad;
+        ctx.fillRect(0, 0, SIZE, SIZE);
+        ctx.restore();
+
+        // Satellites
+        const TRAIL = 22;   // number of trail segments
+        const DT    = 0.09; // time step between trail points
+
+        for (const def of satDefs) {
+          // Build trail points (oldest → newest)
+          const pts = [];
+          for (let i = TRAIL; i >= 0; i--) {
+            pts.push(satPos(def, angle - i * DT));
+          }
+
+          // Draw fading trail — skip segments that are behind globe (z ≤ 0)
+          ctx.lineWidth = 1.5;
+          for (let i = 1; i < pts.length; i++) {
+            const p    = pts[i];
+            const prev = pts[i - 1];
+            if (p.z <= 0 || prev.z <= 0) continue;
+            const alpha = (i / pts.length) * 0.55;
+            ctx.beginPath();
+            ctx.moveTo(prev.x, prev.y);
+            ctx.lineTo(p.x, p.y);
+            ctx.strokeStyle = `rgba(${def.rgb},${alpha})`;
+            ctx.stroke();
+          }
+
+          // Draw satellite body (head of trail)
+          const head = pts[pts.length - 1];
+          if (head.z > 0) {
+            const dotR = Math.max(2, R * 0.013);
+            const glowR = dotR * 3.5;
+
+            // Glow halo
+            const glow = ctx.createRadialGradient(head.x, head.y, 0, head.x, head.y, glowR);
+            glow.addColorStop(0, `rgba(${def.rgb},0.75)`);
+            glow.addColorStop(1, `rgba(${def.rgb},0)`);
+            ctx.beginPath();
+            ctx.arc(head.x, head.y, glowR, 0, Math.PI * 2);
+            ctx.fillStyle = glow;
+            ctx.fill();
+
+            // Core dot
+            ctx.beginPath();
+            ctx.arc(head.x, head.y, dotR, 0, Math.PI * 2);
+            ctx.fillStyle = `rgb(${def.rgb})`;
+            ctx.fill();
+          }
+        }
+      }
+
+      function animate() {
+        angle += 0.003;
+        const rotDeg = (angle * 180) / Math.PI;
+        drawGlobe(rotDeg);
+        requestAnimationFrame(animate);
+      }
+
+      animate();
+
+      window.addEventListener('resize', () => {
+        calcDimensions();
+      });
     })();
   </script>
 </body>

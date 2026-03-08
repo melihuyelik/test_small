@@ -1,0 +1,117 @@
+{
+  "schema_version": 1,
+  "issue_key": "LOCAL-25",
+  "generated_from_plan_version": 1,
+  "phases": [
+    {
+      "id": "phase-1",
+      "name": "Globe Implementation",
+      "description": "Add 3D globe canvas element, styles, and animation script to index.html",
+      "order": 1,
+      "tasks": [
+        {
+          "id": "task-1",
+          "title": "Add #globe canvas element to index.html body",
+          "description": "Insert <canvas id=\"globe\"></canvas> in the body of index.html, between the .noise div and the .orb divs.",
+          "blocked_by": [],
+          "blocks": [
+            "task-2",
+            "task-3"
+          ],
+          "affected_files": [
+            "index.html"
+          ],
+          "acceptance_criteria": [
+            "<canvas id=\"globe\"></canvas> exists in the DOM",
+            "Canvas is placed between .noise div and .orb divs"
+          ],
+          "suggested_subagent": "feature-dev:code-architect",
+          "estimated_size": "S",
+          "complexity": "low",
+          "suggested_model": "haiku",
+          "status": "completed"
+        },
+        {
+          "id": "task-2",
+          "title": "Add CSS styles for #globe canvas",
+          "description": "Insert #globe CSS rule into the <style> block after the #particles rule. Set position:fixed, centered with transform, z-index:2, pointer-events:none, opacity:0.85.",
+          "blocked_by": [
+            "task-1"
+          ],
+          "blocks": [
+            "task-4"
+          ],
+          "affected_files": [
+            "index.html"
+          ],
+          "acceptance_criteria": [
+            "#globe CSS rule exists in style block",
+            "Globe is positioned fixed and centered",
+            "z-index is 2",
+            "pointer-events is none",
+            "opacity is 0.85"
+          ],
+          "suggested_subagent": "feature-dev:code-architect",
+          "estimated_size": "S",
+          "complexity": "low",
+          "suggested_model": "haiku",
+          "status": "completed"
+        },
+        {
+          "id": "task-3",
+          "title": "Add globe rendering JavaScript IIFE",
+          "description": "Append a new IIFE <script> block before </body>. Implement: canvas sizing based on window dimensions (R = 38% of smaller dimension), ocean gradient sphere, lat/lon grid lines, simplified continent polygon outlines, atmosphere glow ring, specular highlight, shadow gradient, and requestAnimationFrame rotation loop. Use let (not const) for R, SIZE, cx, cy so resize handler can update them without location.reload().",
+          "blocked_by": [
+            "task-1"
+          ],
+          "blocks": [
+            "task-4"
+          ],
+          "affected_files": [
+            "index.html"
+          ],
+          "acceptance_criteria": [
+            "Globe renders on canvas with ocean gradient",
+            "Grid lines visible (every 30 degrees lon/lat)",
+            "Continent outlines rendered in green",
+            "Atmosphere glow ring visible",
+            "Specular highlight on top-left",
+            "Shadow gradient on right side",
+            "Globe rotates continuously via requestAnimationFrame",
+            "Resize handler recalculates dimensions using mutable let vars (no location.reload())"
+          ],
+          "suggested_subagent": "feature-dev:code-architect",
+          "estimated_size": "L",
+          "complexity": "high",
+          "suggested_model": "opus",
+          "status": "completed"
+        },
+        {
+          "id": "task-4",
+          "title": "Verify build and visual output in browser",
+          "description": "Open index.html in a browser and confirm: globe appears centered, rotates, shows grid/continents/glow/highlight, countdown and text remain above globe, no JS console errors.",
+          "blocked_by": [
+            "task-2",
+            "task-3"
+          ],
+          "blocks": [],
+          "affected_files": [
+            "index.html"
+          ],
+          "acceptance_criteria": [
+            "Globe canvas visible and centered on page",
+            "Globe rotates slowly",
+            "Grid lines, continents, atmosphere glow, specular highlight all visible",
+            "Countdown and container text render above globe (z-index ordering correct)",
+            "No JavaScript console errors"
+          ],
+          "suggested_subagent": "feature-dev:code-architect",
+          "estimated_size": "S",
+          "complexity": "low",
+          "suggested_model": "haiku",
+          "status": "completed"
+        }
+      ]
+    }
+  ]
+}
