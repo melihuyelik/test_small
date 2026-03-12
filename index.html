@@ -97,7 +97,7 @@
       right: 0;
       z-index: 10;
       text-align: center;
-      padding: 0 2rem 3vh;
+      padding: 0 2rem calc(3vh + 2rem);
       pointer-events: auto;
       animation: fadeUp 1.2s 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
     }
@@ -477,7 +477,7 @@
         const sx = a * Math.cos(theta);
         const sz = b * Math.sin(theta);
         const sy = R * def.inclAmp * Math.sin(theta + def.phase * 0.3);
-        return { x: cx + sx, y: cy + sy, z: sz };
+        return { x: cx + sx, y: cy + sy, z: sz / b };
       }
 
       // Current position of satellite based on global angle
