@@ -336,16 +336,22 @@
       border: 1px solid var(--toggle-border);
       color: var(--toggle-color);
       border-radius: 999px;
-      width: 2.2rem;
       height: 2.2rem;
-      font-size: 1rem;
+      font-size: 0.75rem;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
+      gap: 0.35rem;
       transition: background 0.2s, border-color 0.2s, transform 0.15s;
       line-height: 1;
-      padding: 0;
+      padding: 0 0.75rem;
+      letter-spacing: 0.05em;
+      font-family: inherit;
+    }
+
+    .theme-btn .theme-icon {
+      font-size: 1rem;
     }
 
     .theme-btn:hover {
@@ -357,7 +363,9 @@
 </head>
 <body>
   <nav class="theme-nav">
-    <button id="theme-toggle" class="theme-btn" aria-label="Toggle theme">&#9790;</button>
+    <button id="theme-toggle" class="theme-btn" aria-label="Toggle theme">
+      <span class="theme-icon">&#9790;</span><span id="theme-label">Dark</span>
+    </button>
   </nav>
   <canvas id="particles"></canvas>
   <div class="noise"></div>
@@ -765,17 +773,21 @@
 
     // ─── Theme toggle ──────────────────────────────────────────────────────────
     (function () {
-      const btn = document.getElementById('theme-toggle');
+      const btn   = document.getElementById('theme-toggle');
+      const icon  = document.querySelector('.theme-icon');
+      const label = document.getElementById('theme-label');
       const MOON = '\u263E'; // ☾
       const SUN  = '\u2600'; // ☀
 
       function applyTheme(theme) {
         if (theme === 'light') {
           document.body.classList.add('light-mode');
-          btn.textContent = SUN;
+          icon.textContent  = SUN;
+          label.textContent = 'Light';
         } else {
           document.body.classList.remove('light-mode');
-          btn.textContent = MOON;
+          icon.textContent  = MOON;
+          label.textContent = 'Dark';
         }
       }
 
