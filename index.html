@@ -5,6 +5,38 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Coming Soon</title>
   <style>
+    :root {
+      --bg:              #050508;
+      --color:           #d0d8e0;
+      --orb-opacity:     0.18;
+      --noise-opacity:   0.025;
+      --badge-border:    rgba(204,17,0,0.6);
+      --badge-color:     #ff6644;
+      --subtitle-color:  rgba(208,216,224,0.55);
+      --unit-label:      rgba(208,216,224,0.35);
+      --tagline-color:   rgba(208,216,224,0.2);
+      --footer-color:    rgba(208,216,224,0.2);
+      --toggle-bg:       rgba(255,255,255,0.08);
+      --toggle-border:   rgba(255,255,255,0.12);
+      --toggle-color:    rgba(208,216,224,0.7);
+    }
+
+    .light-mode {
+      --bg:              #f0f4f8;
+      --color:           #1a1a2e;
+      --orb-opacity:     0.10;
+      --noise-opacity:   0.015;
+      --badge-border:    rgba(204,17,0,0.5);
+      --badge-color:     #cc1100;
+      --subtitle-color:  rgba(30,30,60,0.65);
+      --unit-label:      rgba(30,30,60,0.45);
+      --tagline-color:   rgba(30,30,60,0.35);
+      --footer-color:    rgba(30,30,60,0.35);
+      --toggle-bg:       rgba(0,0,0,0.06);
+      --toggle-border:   rgba(0,0,0,0.12);
+      --toggle-color:    rgba(30,30,60,0.7);
+    }
+
     *, *::before, *::after {
       box-sizing: border-box;
       margin: 0;
@@ -12,8 +44,8 @@
     }
 
     body {
-      background: #050508;
-      color: #d0d8e0;
+      background: var(--bg);
+      color: var(--color);
       font-family: 'Segoe UI', system-ui, sans-serif;
       min-height: 100vh;
       overflow: hidden;
@@ -39,7 +71,7 @@
       position: fixed;
       border-radius: 50%;
       filter: blur(80px);
-      opacity: 0.18;
+      opacity: var(--orb-opacity);
       z-index: 0;
     }
 
@@ -110,8 +142,8 @@
     .badge {
       display: inline-block;
       padding: 4px 18px;
-      border: 1px solid rgba(204, 17, 0, 0.6);
-      color: #ff6644;
+      border: 1px solid var(--badge-border);
+      color: var(--badge-color);
       border-radius: 999px;
       font-size: 0.72rem;
       letter-spacing: 0.35em;
@@ -186,7 +218,7 @@
 
     .subtitle {
       font-size: 0.9rem;
-      color: rgba(208, 216, 224, 0.55);
+      color: var(--subtitle-color);
       letter-spacing: 0.25em;
       text-transform: uppercase;
       margin-bottom: 1.8rem;
@@ -223,7 +255,7 @@
       font-size: 0.6rem;
       letter-spacing: 0.3em;
       text-transform: uppercase;
-      color: rgba(208, 216, 224, 0.35);
+      color: var(--unit-label);
     }
 
     .line {
@@ -243,7 +275,7 @@
 
     .tagline {
       font-size: 0.65rem;
-      color: rgba(208, 216, 224, 0.2);
+      color: var(--tagline-color);
       letter-spacing: 0.35em;
       text-transform: uppercase;
     }
@@ -252,7 +284,7 @@
       position: fixed;
       inset: 0;
       z-index: 1;
-      opacity: 0.025;
+      opacity: var(--noise-opacity);
       pointer-events: none;
       background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
       background-size: 128px 128px;
@@ -267,7 +299,7 @@
       text-align: center;
       padding: 0.6rem 2rem;
       font-size: 0.65rem;
-      color: rgba(208, 216, 224, 0.2);
+      color: var(--footer-color);
       letter-spacing: 0.2em;
       text-transform: uppercase;
       pointer-events: auto;
@@ -287,9 +319,46 @@
       .countdown { gap: 0.7rem; }
       .unit { min-width: 56px; }
     }
+
+    .theme-nav {
+      position: fixed;
+      top: 0;
+      right: 0;
+      z-index: 100;
+      padding: 0.75rem 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .theme-btn {
+      background: var(--toggle-bg);
+      border: 1px solid var(--toggle-border);
+      color: var(--toggle-color);
+      border-radius: 999px;
+      width: 2.2rem;
+      height: 2.2rem;
+      font-size: 1rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s, border-color 0.2s, transform 0.15s;
+      line-height: 1;
+      padding: 0;
+    }
+
+    .theme-btn:hover {
+      transform: scale(1.1);
+      background: var(--toggle-bg);
+      border-color: var(--badge-border);
+    }
   </style>
 </head>
 <body>
+  <nav class="theme-nav">
+    <button id="theme-toggle" class="theme-btn" aria-label="Toggle theme">&#9790;</button>
+  </nav>
   <canvas id="particles"></canvas>
   <div class="noise"></div>
   <canvas id="globe"></canvas>
@@ -692,6 +761,32 @@
       animate();
 
       window.addEventListener('resize', () => { calcDimensions(); });
+    })();
+
+    // ─── Theme toggle ──────────────────────────────────────────────────────────
+    (function () {
+      const btn = document.getElementById('theme-toggle');
+      const MOON = '\u263E'; // ☾
+      const SUN  = '\u2600'; // ☀
+
+      function applyTheme(theme) {
+        if (theme === 'light') {
+          document.body.classList.add('light-mode');
+          btn.textContent = SUN;
+        } else {
+          document.body.classList.remove('light-mode');
+          btn.textContent = MOON;
+        }
+      }
+
+      // Restore saved preference on load
+      applyTheme(localStorage.getItem('theme') || 'dark');
+
+      btn.addEventListener('click', function () {
+        const next = document.body.classList.contains('light-mode') ? 'dark' : 'light';
+        localStorage.setItem('theme', next);
+        applyTheme(next);
+      });
     })();
   </script>
 </body>
